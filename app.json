@@ -1,0 +1,12 @@
+{
+  "name": "RequestPolicyNative",
+  "displayName": "RequestPolicyNative",
+  "expo": {
+    "name": "RequestPolicyNative",
+    "slug": "RequestPolicyNative",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}

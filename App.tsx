@@ -13,7 +13,7 @@ import gql from 'graphql-tag';
 import {debugExchange} from './debugExchange';
 
 const client = createClient({
-  url: "https://example.example.com/graphql",
+  url: "https://api.spacex.land/graphql/",
   exchanges: [
     dedupExchange,
     cacheExchange,

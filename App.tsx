@@ -3,6 +3,7 @@ import {Alert, Button, StyleSheet, Text, View} from 'react-native';
 import {
   createClient,
   dedupExchange,
+  debugExchange,
   cacheExchange,
   fetchExchange,
   Provider
@@ -10,7 +11,6 @@ import {
 import { retryExchange } from '@urql/exchange-retry';
 import { Todos } from "./components";
 import gql from 'graphql-tag';
-import {debugExchange} from './debugExchange';
 
 const client = createClient({
   url: "https://api.spacex.land/graphql/",
@@ -22,10 +22,7 @@ const client = createClient({
       maxNumberAttempts: 5,
       maxDelayMs: 2000,
     }),
-    debugExchange({
-      onIncoming: (op) => console.warn('Incoming Operation: ', op.key, op.kind),
-      onCompleted: (result) => console.warn('Completed data: ', result.operation.key, result.error),
-    }),
+    debugExchange,
     fetchExchange,
   ],
   requestPolicy: "network-only"

@@ -1,39 +1,34 @@
 import React, {useState} from 'react';
-import {Button, StyleSheet, Text, View} from 'react-native';
+import {Alert, Button, StyleSheet, Text, View} from 'react-native';
 import {
   createClient,
   dedupExchange,
-  // fetchExchange,
+  cacheExchange,
+  fetchExchange,
   Provider
 } from "urql";
-import { fetchExchange } from './urql-with-logs/core/src';
-// import { requestPolicyExchange } from "@urql/exchange-request-policy";
-import { requestPolicyExchange } from "./urql-with-logs/requestPolicyExchange"; // adds console logs
-import { offlineExchange } from "@urql/exchange-graphcache";
-import makeOfflineStorage from './offlineStorage';
+import { retryExchange } from '@urql/exchange-retry';
 import { Todos } from "./components";
-
-const storage = makeOfflineStorage();
-const cache = offlineExchange({
-  storage
-});
+import gql from 'graphql-tag';
+import {debugExchange} from './debugExchange';
 
 const client = createClient({
-  url: "https://0ufyz.sse.codesandbox.io",
+  url: "https://example.example.com/graphql",
   exchanges: [
     dedupExchange,
-    requestPolicyExchange({
-      ttl: 2 * 1000,
-      shouldUpgrade: (operation) => {
-        console.log("shouldUpgrade", operation.key);
-        return true;
-      }
+    cacheExchange,
+    retryExchange({
+      retryIf: () => true,
+      maxNumberAttempts: 5,
+      maxDelayMs: 2000,
     }),
-    cache,
-    fetchExchange
+    debugExchange({
+      onIncoming: (op) => console.warn('Incoming Operation: ', op.key, op.kind),
+      onCompleted: (result) => console.warn('Completed data: ', result.operation.key, result.error),
+    }),
+    fetchExchange,
   ],
-  // Can change this to cache-and-network and network request will not get torn down
-  requestPolicy: "cache-first"
+  requestPolicy: "network-only"
 });
 
 export default function App() {
@@ -46,12 +41,35 @@ export default function App() {
     <Provider value={client}>
       <View style={styles.container}>
         <Button onPress={toggleTodos} title="Toggle todos"/>
+        <Button onPress={() => makeRequest(client)} title="Fire one off request"/>
         {showTodos ? <Todos /> : null}
-        <Text>Open up App.tsx to start working on your app!</Text>
       </View>
     </Provider>
   );
 }
+
+const makeRequest = async (client) => {
+  const { data, error } = await client
+    .query(TodoQuery)
+    .toPromise();
+
+  if (error) {
+    Alert.alert('Got an error');
+    console.warn('Got an error', error);
+  }
+  if (data) {
+    console.warn('Got data', data);
+  }
+}
+
+const TodoQuery = gql`
+  query {
+    getGarbage {
+      dumpster
+    }
+  }
+`;
+
 
 const styles = StyleSheet.create({
   container: {

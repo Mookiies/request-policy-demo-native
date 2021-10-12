@@ -1,0 +1,11 @@
+overwrite: true
+config:
+  withHooks: true
+  gqlImport: urql#gql
+  documentMode: documentNode
+generates:
+  interface.ts:
+    schema:
+      - https://api.spacex.land/graphql/
+    plugins:
+      - typescript
